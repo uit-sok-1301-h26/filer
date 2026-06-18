@@ -1,0 +1,367 @@
+---
+title: "Konsumentteori"
+author: "Mikko Moilanen & Derek J. Clark"
+format: 
+  revealjs:
+    chalkboard: true
+  
+execute: 
+  echo: false
+  output: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+## Konsumentens preferanser
+
+Vi ser på en konsument som kan kjøpe gode $x_1$ og $x_2$.
+
+Konsumentens preferanser uttrykkes gjennom en nyttefunksjon:
+
+$$U(x_1,x_2)$$
+
+Konsumenten liker begge goder, dvs $\frac{\partial U}{\partial x_1}>0, \frac{\partial U}{\partial x_2}>0$
+
+## Indifferenskurver I
+
+En indifferenskurve viser kombinasjoner av de to godene som gir konsumenten like mye nytte.
+
+Matematisk ser en indifferenskurve slik ut:
+
+$$u_0=U(x_1,x_2)$$
+
+Her er $u_0$ nyttenivået som oppnåes.
+
+## Indifferenskurver II
+
+```{r}
+
+rm(list = ls())
+
+suppressPackageStartupMessages(library(tidyverse))
+
+
+#lag aksen for tegningen
+
+axes_1 <- ggplot()+
+  labs(x=expression(x[1]), y=expression(x[2]))+
+  theme(axis.title = element_text(size = 15),
+        plot.title = element_text(size = 15),
+        panel.background = element_blank(), # hvit bakgrunn
+        axis.line = element_line(colour = "black"), # sett inn akselinjer
+        axis.title.x = element_text(hjust = 1),
+        axis.title.y = element_text(angle = 0, vjust = 1, hjust=1))+ # juster labels på aksene  
+  coord_fixed(ratio = 1)+ # lik skala for x og y aksen
+  scale_x_continuous(limits = c(0, 20), expand = c(0, 0))+
+  scale_y_continuous(limits = c(0, 20), expand = c(0, 0)) # begrense aksene
+# og sikre at akselinjene møttes i (0,0).
+
+# nyttefunkjsonen som brukes U=x1^.5x2^.5 (Cobb-Douglas)
+
+# vi angir noen indifferenskurver
+
+I_0 <- function(x_1) (5^2)/x_1 # nyttenivå 5
+I_1 <- function(x_1) (7.3485^2)/x_1 # nytte=7.3485
+I_2 <- function(x_1) (9^2)/x_1 # nytte =9
+
+figur_1 <- axes_1 + labs(title="Indifferenskurver")+
+  stat_function(
+        fun=I_0,
+        mapping = aes()
+        ) +
+  stat_function(
+                fun=I_1,
+                mapping = aes()
+  ) +
+  stat_function(
+                fun=I_2,
+                mapping = aes()
+  )+
+  annotate("text",x=19,y=1, label=expression(u[0]))+
+  annotate("text",x=19,y=3.3, label=expression(u[1]))+
+  annotate("text",x=19,y=5.3, label=expression(u[2]))
+
+figur_1
+```
+
+## Egenskaper ved indifferenskurver
+
+- heller nedover (ettersom konsumenten liker begge godene)
+
+- $u_2>u_1>u_0$
+
+- kontinuerlig
+
+- tynn
+
+- krysser ikke for samme individ
+
+## Marginal substitusjonsbrøk
+
+```{r}
+
+figur_2 <- axes_1+
+  labs(title="Marginal substitusjonsbrøk")+
+  stat_function(
+                fun=I_1,
+                mapping = aes()
+  )+
+  annotate("text",x=19,y=3.3, label=expression(u[1]))
+
+
+#+
+ # geom_segment(aes(x=0, y=17.9, xend=10.8, yend=0))+
+#  geom_segment(aes(x=5, y=0, xend=5, yend=9.8), linetype="dashed")+
+ # geom_segment(aes(x=0, y=9.8, xend=5, yend=9.8), linetype="dashed")
+  
+
+figur_2
+```
+
+Helningen til indifferenskurven kalles marginal substitusjonsbrøk (MSB)
+
+Den viser hvor mye av gode 2 konsumenten er villig til å gi bort for å få en ekstra enhet av gode 1.
+
+## Konsumentens budsjett I
+
+Konsumentens muligheter begrenses av sitt budsjett.
+
+Gitt priser $p_1, p_2$ for gode 1 og 2 vil utgiften til innkjøp av gode $i=1,2$ være $p_ix_i$.
+
+Summen av utgiftene kan ikke overstige konsumentens inntekt ($m$):
+
+$$m\geq p_1x_1 + p_2x_2   $$
+
+## Konsumentens budsjett II
+
+Vi ser på konsum i én periode, og da har ikke konsumenten noen motiv for å spare.
+
+Hen liker godene, og derfor bruker hele sitt budsjett slik at budsjettbetingelsen blir
+
+$$m=p_1x_1 + p_2x_2$$
+
+## Relativ pris på gode 1
+
+Budsjettlinjen kan skrives
+
+$$x_2 = \frac{m}{p_2}-\frac{p_1}{p_2}x_1$$
+
+Helningen til budsjettlinjen er $-\frac{p_1}{p_2}$ som er den relative prisen på gode 1.
+
+Dette viser hvor mange enheter av gode 2 konsumenten må gi opp for å kjøpe en ekstra enhet av gode 1.
+
+## Budsjettlinjen
+
+```{r}
+# p1=1.5 p2=1, m=18
+
+buds_0 <- function(x_1) 18-1.5*x_1
+
+figur_3 <- axes_1+
+  labs(title="Konsumentens budsjett")+
+  stat_function(
+                fun=buds_0,
+                mapping = aes()
+  )+
+  annotate("text",x=4.5,y=18, label=expression(m/p[2]))+
+  geom_segment(aes(x=3, y=18, xend=.2, yend=18),
+               arrow = arrow(length = unit(0.25, "cm")))+
+  annotate("text",x=12,y=4., label=expression(m/p[1]))+
+  geom_segment(aes(x=12, y=3, xend=12, yend=.2),
+               arrow = arrow(length = unit(0.25, "cm")))
+
+figur_3
+```
+
+$\frac{m}{p_i}$ er den maksimale mengden av gode $i$ som konsumenten kan kjøpe (ved å kun kjøpe dette godet).
+
+## Prisendringer
+
+Dersom prisen på gode 1 økes blir budsjettlinjen brattere.
+
+Den relative prisen på gode 1 øker, og konsumentens mulighetsområde blir mindre.
+
+```{r}
+
+# øker p1 til 3
+buds_1 <-  function(x_1) 18-3*x_1
+
+figur_4 <- axes_1+
+  labs(title="Økning i pris på gode 1")+
+  stat_function(
+                fun=buds_0,
+                mapping = aes()
+  )+
+   stat_function(
+                fun=buds_1,
+                mapping = aes()
+  )+
+  annotate("text",x=4.5,y=18, label=expression(m/p[2]))+
+  geom_segment(aes(x=3, y=18, xend=.2, yend=18),
+               arrow = arrow(length = unit(0.25, "cm")))+
+  geom_curve(aes(x=10.5, y=2, xend=5.5, yend=1.5),
+               arrow = arrow(length = unit(0.25, "cm")))
+
+figur_4
+```
+
+Maksimal mengde av gode 2 som kan kjøpes har ikke endret seg (prisen på gode 2 er ikke endret).
+
+## Inntektsendringer
+
+Får konsumenten mer inntekt vil budsjettlinjen parallell-forskyves i nordøst retning
+
+Hellningen er det samme ettersom priser er konstante.
+
+```{r}
+
+# øke inntekt til 20
+buds_2 <-  function(x_1) 20-1.5*x_1
+
+figur_5 <- axes_1+
+  labs(title="Økning i inntekt")+
+  stat_function(
+                fun=buds_0,
+                mapping = aes()
+  )+
+   stat_function(
+                fun=buds_2,
+                mapping = aes()
+  )+
+  geom_curve(aes(x=10.8, y=1.8, xend=12, yend=2),
+               arrow = arrow(length = unit(0.25, "cm")))
+
+figur_5
+```
+
+## Konsumentens tilpasning
+
+```{r}
+
+figur_6 <- axes_1+
+  labs(title="Konsumentens tilpasning")+
+  stat_function(
+                fun=I_1,
+                mapping = aes()
+  )+
+  stat_function(
+                fun=buds_0,
+                mapping = aes()
+  )+
+  annotate("text",x=19,y=3.3, label=expression(u[1]))+
+  geom_segment(aes(x=6, y=0, xend=6, yend=9), linetype="dashed")+
+  geom_segment(aes(x=0, y=9, xend=6, yend=9), linetype="dashed")+
+  annotate("text",x=14,y=9, label="Optimal tilpasning")+
+  geom_segment(aes(x=8, y=9, xend=6.5, yend=9),
+               arrow = arrow(length = unit(0.25, "cm")))+
+  geom_point(aes(x = 6, y = 9), color = "red", size = 2)
+  
+
+figur_6
+
+# løsning x1=6 x2=9
+```
+
+I tilpasningspunktet har vi $MSB = \frac{p_1}{p_2}$.
+
+## Effekt av en økning i $p_1$
+
+```{r}
+# øk pris på p1 til 3
+
+I_ny <- function(x_1) (5.196^2)/x_1 # nyttenivå 5.196
+figur_7 <- axes_1+
+  labs(title="Økning i pris på gode 1")+
+  stat_function(
+                fun=I_1,
+                mapping = aes()
+  )+
+  stat_function(
+                fun=I_ny,
+                mapping = aes()
+  )+
+  stat_function(
+                fun=buds_0,
+                mapping = aes()
+  )+
+  stat_function(
+                fun=buds_1,
+                mapping = aes()
+  )+
+  annotate("text",x=19,y=3.3, label=expression(u[1]))+
+  geom_segment(aes(x=6, y=9, xend=3, yend=9),
+               arrow = arrow(length = unit(0.25, "cm")))+
+  geom_point(aes(x = 6, y = 9), color = "red", size = 2)+
+  geom_point(aes(x = 3, y = 9), color = "red", size = 2)
+  
+
+figur_7
+
+# ny tilpasning x1=3 x2=9
+```
+
+I dette eksempelet faller forbruk av gode 1 mens konsumenten kjøper like mye av gode 2.
+
+Konsumenten får det verre, dvs lavere nyttenivå etter prisøkningen.
+
+## Inntekts- og substitusjonseffekten I
+
+En prisøkning har to effekter på konsumentens tilpasning
+
+- det kjøpes mindre av varen som er blitt relativ dyrere (**substitusjonseffekt**)
+
+- realinntekten er redusert som vil sannsynligvis redusere forbruk av begge godene (**inntektseffekt)**
+
+## Inntekts- og substitusjonseffekten II
+
+```{r}
+fikt_bud <- function(x_1) 25.456-3*x_1
+
+figur_8 <- figur_7+
+  stat_function(
+                fun=fikt_bud,
+                mapping = aes(), linetype="dashed"
+  )+
+  annotate("text",x=7,y=9, label="A")+
+  annotate("text",x=2,y=9, label="B")+
+  annotate("text",x=5,y=13, label="C")+
+  geom_point(aes(x = 6, y = 9), color = "red", size = 2)+
+  geom_point(aes(x = 3, y = 9), color = "red", size = 2)+
+  geom_point(aes(x = 4.24, y = 12.728), color = "red", size = 2)
+  
+
+figur_8
+```
+
+Opprinnelige tilpasning er $A$ og ny tilpasning er $B$
+
+Totaleffekten av prisøkningen er $AB$
+
+## Inntekts- og substitusjonseffekten III
+
+```{r}
+figur_8
+```
+
+Tankeeksperiment: hva om konsumenten ble kompensert for prisøkningen ved at vi gir dem inntekt nok til å finne en ny tilpasning på den opprinnelige indifferenskurve $u_1$.
+
+## Inntekts- og substitusjonseffekten IV
+
+```{r}
+figur_8
+```
+
+Skyv budsjettlinjen (med de nye prisene) parallellt utover inntil den tangerer $u_1$. (Striplet linje)
+
+Dette gir en tilpasning i $C$.
+
+## Inntekts- og substitusjonseffekten V
+
+Dersom konsumenten hadde nok inntekt til å oppnå $u_1$ gitt de nye prisene, så ville hen ha substituert bort fra gode 1 som er blitt relativt dyrere.
+
+Dette er substitusjonseffekten som går fra $A$ til $C$. Negativ for varen som er blitt relativt dyrere, positiv for $x_2$.
+
+Resten av endringen i konsumentens tilpasning ($C$ til $B$) skyldes at hen har fått lavere realinntekt pga. prisøkningen. Dette er inntektseffekten, og reduserer etterspørselen etter begge godene.
