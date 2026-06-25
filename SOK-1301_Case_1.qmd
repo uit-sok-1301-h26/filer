@@ -1,0 +1,200 @@
+---
+title: "SOK-1301 - Case 1"
+author: "Derek J. Clark & Even S. Hvinden"
+format: pdf
+echo: true
+output: true
+editor: visual
+warning: false
+---
+
+## Instruksjoner
+
+Denne oppgaven skal løses interaktivt i RStudio ved å legge inn egen kode og kommentarer. Dette er ment som nyttig øving, og skal ikke leveres inn.
+
+## Bakgrunn
+
+Vi skal analysere utviklingen i bruttonasjonalprodukt (BNP) i Norge. Vi bruker data Statistisk Sentralbyrå (SSB), tabell "[09842: BNP og andre hovedstørrelser (kr per innbygger), etter år](https://www.ssb.no/statbank/table/09842)". Tabellen inneholder årlige data på BNP per innbygger, fra 1970 til 2024. Dette notatet ble oppdatert 18. juni 2026, og antall observasjoner osv er tatt fra tabellen denne datoen.
+
+## I. API, visualisering
+
+SSB gir oss tilgang til sine data via en [API](https://www.ssb.no/omssb/tjenester-og-verktoy/api) (*Application Programming Interface*), programvare som lar to applikasjoner kommunisere med hverandre. Man kan benytte R-pakken [PxWebApiData](https://cran.r-project.org/web/packages/PxWebApiData/index.html), som SSB har laget. Vi skal heller bruke en spørring som lagrer vår data som en tibble, klar til å analyseres i `tidyverse`.
+
+Vi begynner med å rydde og laste inn nødvendige pakker:
+
+```{r}
+rm(list = ls())
+library(rjstat)
+library(httr)
+library(tidyverse)
+```
+
+**NB!** Du må installere `rjstat` og `httr` først. Kjør kommandoen `install.packages(c("rjstat", "httr"))` i konsollen. Det må kun gjøres én gang.
+
+Gå til tabell "[09842: BNP og andre hovedstørrelser (kr per innbygger), etter år](https://www.ssb.no/statbank/table/09842)". I venstre meny velg "**Filtrer**" slik at du får opp tilgjengelige valg for denne tabellen, i dette tilfellet "Statistikkvariabel" og "År". Jeg velger å ta "Bruttonasjonalprodukt" og "MEMO: Bruttonasjonalprodukt. Faste 2015-priser"; da har vi BNP med både løpende og faste priser. MEMO angir en variabel som er en tilleggsopplysning, ikke en del av selve regnskapet, men noe som SSB har beregnet.
+
+![](images/clipboard-2412227905.png){fig-align="center" width="241"}
+
+Så haker jeg av "Velg alle" i boksen merket "År" for å få med data fra alle tilgjengelige år.
+
+I venstremarg velger vi nå "**Lagre**". Skroll ned til "API-spørring", velg format som angitt nedenfor, trykk på `GET`, og kopier URL ved å trukke på ikonet i rødt i bildet:
+
+![](images/clipboard-184640827.png){fig-align="center" width="227"}
+
+Våre valg av data er i denne lenken, som vi nå lagrer:
+
+```{r}
+url <- "https://data.ssb.no/api/pxwebapi/v2/tables/09842/data?lang=no&outputFormat=json-stat2&valuecodes[ContentsCode]=BNP,MEMOBNP&valuecodes[Tid]=*&heading=Tid&stub=ContentsCode"
+
+```
+
+Disse url-adressene er ofte lange og du kan dele opp ved hjelp av `paste0()` på følgende vis:
+
+```{r}
+ssb_url <- paste0(
+  "https://data.ssb.no/api/pxwebapi/v2/tables/09842/data",
+  "?lang=no",
+  "&outputFormat=json-stat2",
+  "&valuecodes[ContentsCode]=BNP,MEMOBNP",
+  "&valuecodes[Tid]=*",
+  "&heading=Tid",
+  "&stub=ContentsCode"
+)
+
+```
+
+I ditt Environment-vindu i RStudio bør du nå se to likens url-adresser. Vi trenger kun én, og skal bruke den som heter `url`.
+
+Følgende kode tar dataene som vi vil hente ut, og gjør de om til en tibble som heter `df`.
+
+```{r}
+df <- GET(url) %>%
+  content(as = "text", encoding = "UTF-8") %>%
+  fromJSONstat() %>%
+  as_tibble()
+```
+
+La oss se på vårt datasett:
+
+```{r}
+df
+```
+
+Vi ser at vi har tre kolonner med benevnelse og data type. La oss rydde i data. Det er spesielt tre ting å ta tak i:
+
+1.  Årstallene er lagret som tegn, `<chr>`. Disse skulle heller være heltall, `<int>`.
+
+2.  Kolonnenavn. "statistikkvariabel" er en lang benevnelse som vi vil erstatte, og "value" er unødvendig å skrive på engelsk. Se [3.3.3](https://r4ds.hadley.nz/data-transform.html#columns)`rename()` i pensumet.
+
+3.  Variabelnavn. Disse er også lang.
+
+### Oppgave Ia: Rydd i data
+
+Skriv kode som lagrer dataene med anstendige variabelnavn og årstall som heltall. Fremover bruker jeg "var", og "verdi" for "statistikkvariabel", og "value".
+
+```{r}
+# Oppgave Ia løses her #
+
+
+```
+
+Videre erstatter vi verdiene i kolonne "var": "Bruttonasjonalprodukt" med "BNP" og "MEMO: Bruttonasjonalprodukt. Faste 2015-priser" med "MEMOBNP". Her kan vi bruke `mutate()` kombinert med [`recode()`](https://dplyr.tidyverse.org/reference/recode.html) innenfor `tidyverse`.
+
+```{r}
+df <- df %>% 
+  
+  mutate(
+    var = recode(
+      var,
+      "Bruttonasjonalprodukt" = "BNP",
+      "MEMO: Bruttonasjonalprodukt. Faste 2015-priser" =
+        "MEMOBNP"
+    )
+  )
+
+df
+```
+
+### Oppgave Ib: Lag en figur
+
+Følgende kode skaper en enkel figur.
+
+```{r}
+df %>%
+  filter(var == "BNP") %>%
+  ggplot(aes(x=år,y=verdi)) +
+  geom_line()
+```
+
+Lag en pen figur som viser BNP i tusener av kroner per person, i både løpende og faste priser, mellom 2000 og 2024. Skriv en tydelig forklaring og tolkning av figuren. Hvordan har seriene utviklet seg? Forklar forskjellen mellom BNP i løpende og faste priser. Til hvilke formål er BNP målt i faste priser relevant, og når er det riktig å se BNP i løpende priser?
+
+```{r}
+# oppgave Ib løses her
+
+```
+
+## II. Transformasjon, visualisering
+
+Våre data er en tidsserie, hvilket betyr at rekkefølgen i observasjonene er ordnet etter tid. Vi skal nå regne prosentvis, årlig endring. La $x_t$ være BNP i år $t$. For eksempel vil $x_{1970}$ være $23616$.
+
+Den årlige endringen i BNP fra år $t-1$ til $t$ er gitt ved $x_{t}-x_{t-1}$. I samfunnsøkonomi er det vanlig å betegne dette som $\Delta x_{t} := x_{t}-x_{t-1}$. Tegnet $\Delta$ er den greske bokstaven delta og betegner differanse. For eksempel vil $\Delta x_{1971}=26363-23616=2747$ kroner.
+
+I mange tilfeller er vi interesserte i relativ vekst: Hvor mye økte BNP, relativt til hva den var i utgangspunkt? Den mest brukte enheten er hundredeler eller prosentvis endring, gitt ved $100 \times \Delta x_{t}/x_{t-1}$. For eksempel var den prosentvise endringen i BNP i 1971 $100 \times \Delta x_{1971}/x_{1970}=100\times(2747/23616)\approx11.6$, hvor $\approx$ betegner "omtrent lik" da jeg viser svaret med kun én desimal. Tilsvarende kan man skrive at $\Delta x_{1971}/x_{1970}=2747/23616\approx0.116=11.6\%$, hvor tegnet $\%$ betegner at beløpet oppgis i hundredeler eller prosent.
+
+## Oppgave IIa: Omorganisere datasett med `pivot_wider()`
+
+Vi skal lage to variable `dBNP` og `dMEMOBNP` som viser relativ endring i `BNP` og `MEMOBNP`. Til dette formålet skal vi bruke kommandoene `pivot_wide()` og `pivot_long()` til å omorganisere dataene. Jeg anbefaler dere først å lese [kapittel 5.3/5.4](https://r4ds.hadley.nz/data-tidy#sec-pivoting) i pensum. Betrakt følgende kode.
+
+```{r}
+df_wide <- df %>%
+  pivot_wider(names_from = var, values_from = verdi) 
+
+df_wide
+```
+
+Beskriv konkret hva koden gjorde. Sammenlign `df` og `df_wide`.
+
+## Oppgave IIb: Beregn vekst
+
+Til å beregne endring er funksjonen `lag()` meget nyttig. I denne konteksten er begrepet *lag* et engelsk verb som beskriver foregående observasjon. Bruker vi funksjonen `lag()` på en variabel (kolonne) så returnerer den en ny kolonne hvor verdien er lik foregående observasjon. Se [pensum 13.5.2](https://r4ds.hadley.nz/numbers.html#general-transformations). Betrakt følgende kode:
+
+```{r}
+df_wide <- df_wide %>%
+  mutate(LBNP = lag(BNP,n=1L)) %>%
+  mutate(LMEMOBNP = lag(MEMOBNP,n=1L))
+
+# legger variablene i rekkefølge
+
+df_wide <- df_wide %>%
+  relocate("LBNP", .before = "MEMOBNP")
+
+df_wide
+```
+
+Hvis vi bruker den matematiske notasjonen diskutert tidligere så har nå kolonner med $x_{t}$ (`BNP`, `MEMOBNP`) og $x_{t-1}$ (`LBNP`, `LMEMOBNP`). Bruk funksjonen `mutate()` til å lage en ny variabel med relativ endring i `BNP` og `MEMOBNP` i `df_wide`. Kall disse `DBNP` og `DMEMOBNP`.
+
+```{r}
+# oppgave IIb løses her
+
+```
+
+## Oppgave IIc: Omorganisere datasett med `pivot_longer()`
+
+Bruk nå funksjonen `pivot_longer()` til å transformere `df_wide` til det opprinnelige formatet, altså med variablene `var` og `verdi`. Kall den transformerte tabellen for `df_long`.
+
+**NB!** Husk å bruk anførselstegn (`"[variabelnavn]"`) når du definerer nye variable i `pivot_longer()`.
+
+```{r}
+# oppgave IIc løses her
+
+```
+
+## Oppgave IId: Figur med vekst
+
+Lag en pen figur med prosentvis vekst i nominelt og reelt BNP per person fra 1970 til 2024. Finnes det observasjoner med negativ vekst i reell BNP? Hva skyldes dette?
+
+**Merknad:** Det er en del støy i data. Prøv å kombinere `geom_point()` og `geom_smooth()` for å få et bedre inntrykk av den langsiktige utviklingen.
+
+```{r}
+# oppgave IId løses her
+```
