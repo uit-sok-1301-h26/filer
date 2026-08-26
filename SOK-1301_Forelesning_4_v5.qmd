@@ -8,6 +8,7 @@ format:
   html:
     code-fold: true
     code-tools: true
+    code-copy: false
     self-contained: true
 output: false
 warning: false
