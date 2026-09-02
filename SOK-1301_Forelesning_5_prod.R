@@ -34,6 +34,6 @@ df <- df %>%
 #  OPPGAVE    #
 ################
 
-# 1 Bruk geom_bar() i ggplot 2 for å lage en stolpediagram av produksjonsverdier for hver næring
+# 1 Bruk geom_col() i ggplot 2 for å lage en stolpediagram av produksjonsverdier for hver næring
 # 2 Er det lett å tolke denne visualiseringen? Hva kan gjøres for å forbedre den?
 
