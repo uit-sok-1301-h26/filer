@@ -26,3 +26,28 @@ df <- GET(url) %>%
   content(as = "text", encoding = "UTF-8") %>%
   fromJSONstat() %>%
   as_tibble()
+
+# Dersom du skal bruke dette til å laste ned data fra flere tabeller,
+# kan det være lurt å lage seg en funksjon
+
+# Hjelpefunksjon: samme GET-oppskrift som ovenfor
+hent_ssb <- function(url) {
+  GET(url) %>%
+    content(as = "text", encoding = "UTF-8") %>%
+    fromJSONstat() %>%
+    as_tibble()
+}
+
+# Bruk: df <- hent_ssb(url)
+
+url2 <- paste0(
+  "https://data.ssb.no/api/pxwebapi/v2/tables/09842/data",
+  "?lang=no",
+  "&outputFormat=json-stat2",
+  "&valuecodes[ContentsCode]=BNP,MEMOBNP",
+  "&valuecodes[Tid]=*",
+  "&heading=Tid",
+  "&stub=ContentsCode"
+)
+
+df_bnp <- hent_ssb(url2)
