@@ -92,7 +92,7 @@ df_prod_rebased <- rebase_index(df_prod, 2010)
 
 # nå kan vi kombinere begge dataframes
 
-# ta bort 1970 og kolonne "value" fra df_wage
+# ta bort 1970 og gi nytt navn "index" til kolonne "value" fra df_wage
 
 
 df_wage <- df_wage %>% 
